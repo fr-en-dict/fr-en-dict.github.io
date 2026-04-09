@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="80" fill="#1a1410"/>
+  <!-- Left page -->
+  <rect x="108" y="118" width="132" height="276" rx="10" fill="#faf7f2"/>
+  <!-- Right page -->
+  <rect x="272" y="118" width="132" height="276" rx="10" fill="#faf7f2"/>
+  <!-- Spine -->
+  <rect x="244" y="108" width="24" height="296" rx="5" fill="#8b3a2a"/>
+  <!-- Left page lines -->
+  <rect x="128" y="162" width="88" height="7" rx="3" fill="#d6c9b8"/>
+  <rect x="128" y="180" width="68" height="7" rx="3" fill="#d6c9b8"/>
+  <rect x="128" y="208" width="88" height="6" rx="3" fill="#a89880"/>
+  <rect x="128" y="222" width="58" height="5" rx="3" fill="#a89880"/>
+  <rect x="128" y="235" width="78" height="5" rx="3" fill="#a89880"/>
+  <rect x="128" y="260" width="88" height="6" rx="3" fill="#a89880"/>
+  <rect x="128" y="274" width="48" height="5" rx="3" fill="#a89880"/>
+  <!-- Right page lines -->
+  <rect x="292" y="162" width="88" height="7" rx="3" fill="#d6c9b8"/>
+  <rect x="292" y="180" width="62" height="7" rx="3" fill="#d6c9b8"/>
+  <rect x="292" y="208" width="88" height="6" rx="3" fill="#a89880"/>
+  <rect x="292" y="222" width="70" height="5" rx="3" fill="#a89880"/>
+  <rect x="292" y="235" width="54" height="5" rx="3" fill="#a89880"/>
+  <rect x="292" y="260" width="88" height="6" rx="3" fill="#a89880"/>
+  <rect x="292" y="274" width="64" height="5" rx="3" fill="#a89880"/>
+  <!-- FR label -->
+  <text x="122" y="152" font-family="monospace" font-size="20" font-weight="bold" fill="#2a5c8b">FR</text>
+  <!-- EN label -->
+  <text x="290" y="152" font-family="monospace" font-size="20" font-weight="bold" fill="#8b3a2a">EN</text>
+</svg>

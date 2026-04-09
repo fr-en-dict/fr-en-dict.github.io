@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Free French–English dictionary powered by Wiktionary. Look up French words with definitions, etymology, conjugations, synonyms, and example sentences.">
+<meta name="theme-color" content="#1a1410">
+<title>French–English Dictionary</title>
+<link rel="manifest" href="manifest_fr-en_20260409_0914.json">
+<link rel="icon" href="icon_fr-en_20260409_0914.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:    #1a1410;
+  --faded:  #6b5e52;
+  --light:  #a89880;
+  --rule:   #d6c9b8;
+  --paper:  #faf7f2;
+  --accent: #8b3a2a;
+  --blue:   #2a5c8b;
+  --tag-bg: #ede8df;
+  --ad-bg:  #f0ece3;
+}
+html, body {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* HEADER */
+header {
+  border-bottom: 2px solid var(--ink);
+  padding: 1.2rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.logo {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.05rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+.logo span { color: var(--blue); }
+.header-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--light);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* AD BANNER */
+.ad-banner {
+  background: var(--ad-bg);
+  border-bottom: 1px solid var(--rule);
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.52rem;
+  color: var(--light);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* SEARCH */
+.search-bar {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  z-index: 10;
+}
+#searchInput {
+  flex: 1;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: #fff;
+  padding: 0.5rem 0.8rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.18s;
+}
+#searchInput:focus { border-color: var(--blue); }
+#searchInput::placeholder { color: var(--light); }
+#searchBtn {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.55rem 1.1rem;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.18s;
+  flex-shrink: 0;
+}
+#searchBtn:hover { background: var(--accent); }
+
+/* LAYOUT */
+.page-body {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+main {
+  padding: 1.8rem 2rem 4rem;
+  min-width: 0;
+  border-right: 1px solid var(--rule);
+}
+.sidebar {
+  padding: 1.2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.ad-side {
+  background: var(--ad-bg);
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.5rem;
+  color: var(--light);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  text-align: center;
+  padding: 0.5rem;
+}
+
+/* STATES */
+.state-idle, .state-loading, .state-error {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--light);
+}
+.state-idle p { font-size: 0.95rem; }
+.state-loading { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.spinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--rule);
+  border-top-color: var(--ink);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.state-error { color: var(--accent); font-size: 0.92rem; }
+
+/* ENTRY */
+.entry-headword {
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-bottom: 0.25rem;
+}
+.entry-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--faded);
+  letter-spacing: 0.08em;
+  margin-bottom: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+.entry-meta a {
+  color: var(--light);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--rule);
+  transition: color 0.14s;
+}
+.entry-meta a:hover { color: var(--faded); }
+
+/* WIKTIONARY CONTENT */
+.wikt-section { margin-bottom: 1.8rem; }
+
+.wikt-h3 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faded);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--rule);
+}
+.wikt-h4 {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--light);
+  margin: 0.9rem 0 0.35rem;
+}
+.wikt-h5 {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--faded);
+  margin: 0.6rem 0 0.25rem;
+}
+
+/* Definitions OL */
+.wikt-ol {
+  list-style: none;
+  counter-reset: defcount;
+  padding: 0;
+  margin: 0 0 0.5rem;
+}
+.wikt-ol > li {
+  counter-increment: defcount;
+  display: grid;
+  grid-template-columns: 1.7rem 1fr;
+  gap: 0 0.4rem;
+  margin-bottom: 0.7rem;
+  line-height: 1.6;
+}
+.wikt-ol > li::before {
+  content: counter(defcount);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--light);
+  text-align: right;
+  padding-top: 0.2rem;
+}
+.def-text { font-size: 0.93rem; color: var(--ink); }
+
+/* Examples DL */
+.wikt-dl { margin: 0.35rem 0 0.2rem 0.2rem; }
+.wikt-dl dd {
+  padding: 0.28rem 0 0.28rem 0.75rem;
+  border-left: 2px solid var(--rule);
+  margin-bottom: 0.3rem;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.example-tr {
+  display: block;
+  color: var(--faded);
+  font-size: 0.8rem;
+  margin-top: 0.08rem;
+}
+
+/* UL inside defs */
+.wikt-ul {
+  list-style: disc;
+  padding-left: 1.2rem;
+  margin: 0.2rem 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+/* Term chips */
+.term-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.25rem 0 0.7rem;
+}
+.term-chip {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: var(--blue);
+  background: var(--tag-bg);
+  padding: 0.12rem 0.5rem;
+  border-radius: 3px;
+  cursor: pointer;
+  border: none;
+  transition: background 0.14s, color 0.14s;
+}
+.term-chip:hover { background: var(--blue); color: #fff; }
+
+/* Links in content */
+.wikt-content a {
+  color: var(--blue);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--rule);
+  transition: color 0.14s, border-color 0.14s;
+}
+.wikt-content a:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Tables */
+.wikt-content table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin: 0.5rem 0 1rem;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.wikt-content th, .wikt-content td {
+  border: 1px solid var(--rule);
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+.wikt-content th {
+  background: var(--tag-bg);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faded);
+  font-weight: 400;
+}
+
+/* In-article ad */
+.ad-inline {
+  background: var(--ad-bg);
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.5rem;
+  color: var(--light);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 1.4rem 0;
+  border-radius: 4px;
+}
+
+/* Suggestions */
+.suggestions { margin-top: 1.8rem; }
+.suggestions-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--light);
+  margin-bottom: 0.5rem;
+}
+.suggestion-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: var(--faded);
+  background: none;
+  border: 1px solid var(--rule);
+  padding: 0.22rem 0.7rem;
+  margin: 0.12rem;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.14s;
+}
+.suggestion-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+/* FOOTER */
+footer {
+  border-top: 1px solid var(--rule);
+  padding: 0.9rem 2rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.56rem;
+  color: var(--light);
+  letter-spacing: 0.06em;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem 1rem;
+}
+footer a { color: var(--light); text-decoration: none; }
+footer a:hover { color: var(--faded); }
+
+/* COOKIE BANNER */
+#cookieBanner {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--ink);
+  color: #e0d8cc;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  z-index: 1000;
+}
+#cookieBanner a { color: #a89880; }
+#cookieAccept {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.32rem 0.85rem;
+  background: var(--paper);
+  color: var(--ink);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* RESPONSIVE */
+@media (max-width: 680px) {
+  .page-body { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  header, main, footer { padding-left: 1rem; padding-right: 1rem; }
+  .search-bar { padding-left: 1rem; padding-right: 1rem; }
+  .entry-headword { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index_fr-en_20260409_0914.html">FR<span>–</span>EN</a>
+  <span class="header-sub">French–English Dictionary · Wiktionary</span>
+</header>
+
+<div class="ad-banner">
+  <!-- AdSense top banner: replace with your ad unit -->
+  <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins><script>(adsbygoogle=window.adsbygoogle||[]).push({});</script> -->
+  advertisement
+</div>
+
+<div class="search-bar">
+  <input type="text" id="searchInput" placeholder="Search a French word…" autocomplete="off" spellcheck="false">
+  <button id="searchBtn">Search</button>
+</div>
+
+<div class="page-body">
+  <main id="main">
+    <div class="state-idle"><p>Enter a French word to get started.</p></div>
+  </main>
+  <aside class="sidebar">
+    <div class="ad-side">
+      <!-- AdSense sidebar unit -->
+      advertisement
+    </div>
+    <div class="ad-side">
+      <!-- AdSense sidebar unit -->
+      advertisement
+    </div>
+  </aside>
+</div>
+
+<footer>
+  <span>Content from <a href="https://en.wiktionary.org" target="_blank" rel="noopener">Wiktionary</a> · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a></span>
+  <a href="about_fr-en_20260409_0914.html">About</a>
+  <a href="privacy_fr-en_20260409_0914.html">Privacy Policy</a>
+</footer>
+
+<div id="cookieBanner" style="display:none">
+  <span>This site uses third-party cookies (Google AdSense) to serve ads. <a href="privacy_fr-en_20260409_0914.html">Learn more</a></span>
+  <button id="cookieAccept">OK, got it</button>
+</div>
+
+<script>
+/* ── CONFIG ── */
+const SUGGESTIONS = ['manger','être','avoir','aller','faire','maison',
+  'lumière','amour','cheval','enfant','en','eau','nuit','partir','livre'];
+
+const REMOVE_SECTIONS = new Set([
+  'pronunciation','descendants','further reading','references',
+  'see also','homophones','translations','external links'
+]);
+
+/* ── COOKIE BANNER ── */
+(function() {
+  if (!localStorage.getItem('cookie_ok')) {
+    document.getElementById('cookieBanner').style.display = 'flex';
+  }
+  document.getElementById('cookieAccept').onclick = function() {
+    localStorage.setItem('cookie_ok', '1');
+    document.getElementById('cookieBanner').style.display = 'none';
+  };
+})();
+
+/* ── DOM ── */
+const mainEl = document.getElementById('main');
+const input  = document.getElementById('searchInput');
+const btn    = document.getElementById('searchBtn');
+
+btn.addEventListener('click', () => lookup());
+input.addEventListener('keydown', e => { if (e.key === 'Enter') lookup(); });
+
+// URL param support: ?q=manger
+(function() {
+  const q = new URLSearchParams(location.search).get('q');
+  if (q) { input.value = q; lookup(q); }
+})();
+
+/* ── UTILS ── */
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                  .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function normSec(s) { return s.toLowerCase().trim(); }
+
+/* Move leading parenthetical labels to end of definition text.
+   e.g. "(transitive) to eat" → "to eat (transitive)"
+   Works on a cloned li's innerHTML string. */
+function reorderLabels(innerHTML) {
+  // Plain-text leading labels: "(word, word) rest"
+  return innerHTML.replace(
+    /^(\s*(?:<[^>]+>)*\s*\([^)]+\)\s*(?:<\/[^>]+>)?\s*)+/,
+    (match) => `\x01${match}`
+  ).replace(/^([\s\S]*?)\x01([\s\S]*)$/, (_, after, labels) => {
+    return after.trim() + ' ' + labels.trim();
+  });
+}
+
+/* Rewrite wiktionary internal links → lookup; external → new tab */
+function rewriteLinks(root) {
+  root.querySelectorAll('a[href]').forEach(a => {
+    const href = a.getAttribute('href') || '';
+    const m = href.match(/(?:^\/wiki\/|wiktionary\.org\/wiki\/)([^#?]+)(#[^?]*)?/);
+    if (m) {
+      const word   = decodeURIComponent(m[1]).replace(/_/g, ' ');
+      const anchor = m[2] || '';
+      if (!anchor || anchor === '#French') {
+        a.href = `?q=${encodeURIComponent(word)}`;
+        a.addEventListener('click', e => { e.preventDefault(); lookup(word); });
+      } else {
+        a.href = `https://en.wiktionary.org/wiki/${m[1]}${anchor}`;
+        a.target = '_blank'; a.rel = 'noopener';
+      }
+    } else if (/^(https?:)?\/\//.test(href)) {
+      a.target = '_blank'; a.rel = 'noopener';
+    }
+  });
+}
+
+/* ── FETCH ── */
+async function lookup(word) {
+  const term = (word !== undefined ? word : input.value).trim();
+  if (!term) return;
+  input.value = term;
+  history.replaceState(null, '', `?q=${encodeURIComponent(term)}`);
+
+  mainEl.innerHTML = `<div class="state-loading"><div class="spinner"></div>
+    <span style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;color:var(--light)">SEARCHING…</span></div>`;
+
+  try {
+    const res = await fetch(
+      `https://en.wiktionary.org/api/rest_v1/page/html/${encodeURIComponent(term)}`
+    );
+    if (!res.ok) {
+      showError(res.status === 404
+        ? `No entry found for «\u00a0${esc(term)}\u00a0».`
+        : `Error ${res.status} — could not reach Wiktionary.`);
+      showSuggestions();
+      return;
+    }
+    const html  = await res.text();
+    const doc   = new DOMParser().parseFromString(html, 'text/html');
+    const frNode = extractFrench(doc);
+    if (!frNode) {
+      showError(`No French entry found for «\u00a0${esc(term)}\u00a0».`);
+      showSuggestions();
+      return;
+    }
+    renderEntry(frNode, term);
+  } catch(e) {
+    showError('Network error — please check your connection.');
+  }
+}
+
+/* ── EXTRACT FRENCH SECTION ── */
+function extractFrench(doc) {
+  // Try <section> wrapper first (newer Wiktionary HTML)
+  for (const sec of doc.querySelectorAll('section')) {
+    const h2 = sec.querySelector(':scope > h2');
+    if (h2 && h2.textContent.replace(/\[.*?\]/g,'').trim() === 'French') return sec;
+  }
+  // Fallback: find h2 by text/id and collect siblings
+  for (const h2 of doc.querySelectorAll('h2')) {
+    const txt = h2.textContent.replace(/\[.*?\]/g,'').trim();
+    const id  = h2.id || (h2.querySelector('[id]') || {}).id || '';
+    if (txt === 'French' || id === 'French') {
+      const frag = doc.createElement('div');
+      let el = h2.nextElementSibling;
+      while (el && el.tagName !== 'H2') {
+        frag.appendChild(el.cloneNode(true));
+        el = el.nextElementSibling;
+      }
+      return frag;
+    }
+  }
+  return null;
+}
+
+/* ── RENDER ── */
+function renderEntry(node, term) {
+  const wrap = document.createElement('div');
+
+  // Headword
+  wrap.innerHTML = `
+    <div class="entry-headword">${esc(term)}</div>
+    <div class="entry-meta">
+      <span>fr → en</span>
+      <a href="https://en.wiktionary.org/wiki/${encodeURIComponent(term)}#French"
+         target="_blank" rel="noopener">view on Wiktionary ↗</a>
+    </div>`;
+
+  const children = [...node.children].filter(el => el.tagName !== 'H2');
+  let buf      = null;
+  let skip     = false;
+  let secCount = 0;
+  let adDone   = false;
+
+  function flush() {
+    if (!buf) return;
+    const sec = document.createElement('div');
+    sec.className = 'wikt-section wikt-content';
+    sec.appendChild(buf);
+    wrap.appendChild(sec);
+    buf = null;
+  }
+
+  for (let i = 0; i < children.length; i++) {
+    const el  = children[i];
+    const tag = el.tagName;
+
+    if (tag === 'H3') {
+      flush();
+      const title = el.textContent.replace(/\[.*?\]/g,'').trim();
+      skip = REMOVE_SECTIONS.has(normSec(title));
+      if (skip) continue;
+      secCount++;
+      if (secCount === 3 && !adDone) {
+        adDone = true;
+        const ad = document.createElement('div');
+        ad.className = 'ad-inline';
+        ad.innerHTML = '<!-- AdSense in-article unit -->\nadvertisement';
+        wrap.appendChild(ad);
+      }
+      buf = document.createElement('div');
+      const h = document.createElement('div');
+      h.className = 'wikt-h3';
+      h.textContent = title;
+      buf.appendChild(h);
+      continue;
+    }
+
+    if (skip) continue;
+    if (!buf) continue;
+
+    if (tag === 'H4') {
+      const t = el.textContent.replace(/\[.*?\]/g,'').trim();
+      if (REMOVE_SECTIONS.has(normSec(t))) { skip = true; continue; }
+      skip = false;
+      const h = document.createElement('div');
+      h.className = 'wikt-h4';
+      h.textContent = t;
+      buf.appendChild(h);
+      continue;
+    }
+
+    if (tag === 'H5') {
+      const h = document.createElement('div');
+      h.className = 'wikt-h5';
+      h.textContent = el.textContent.replace(/\[.*?\]/g,'').trim();
+      buf.appendChild(h);
+      continue;
+    }
+
+    if (tag === 'OL') {
+      const ol = document.createElement('ol');
+      ol.className = 'wikt-ol';
+      for (const li of el.querySelectorAll(':scope > li')) {
+        const newLi = document.createElement('li');
+        const clone = li.cloneNode(true);
+        const nested = [...clone.querySelectorAll(':scope > dl, :scope > ul')];
+        nested.forEach(n => n.remove());
+        const defSpan = document.createElement('span');
+        defSpan.className = 'def-text';
+        defSpan.innerHTML = reorderLabels(clone.innerHTML.trim());
+        const body = document.createElement('div');
+        body.appendChild(defSpan);
+        for (const n of nested) {
+          body.appendChild(n.tagName === 'DL' ? renderDl(n) : renderUl(n));
+        }
+        newLi.appendChild(body);
+        ol.appendChild(newLi);
+      }
+      buf.appendChild(ol);
+      continue;
+    }
+
+    if (tag === 'DL') { buf.appendChild(renderDl(el)); continue; }
+
+    if (tag === 'UL') {
+      const links = [...el.querySelectorAll('a')];
+      if (links.length) {
+        const block = document.createElement('div');
+        block.className = 'term-block';
+        links.forEach(a => {
+          const w = a.textContent.trim();
+          if (!w) return;
+          const chip = document.createElement('button');
+          chip.className = 'term-chip';
+          chip.textContent = w;
+          chip.addEventListener('click', () => lookup(w));
+          block.appendChild(chip);
+        });
+        buf.appendChild(block);
+      } else {
+        buf.appendChild(renderUl(el));
+      }
+      continue;
+    }
+
+    if (tag === 'P') {
+      const p = el.cloneNode(true);
+      p.style.cssText = 'font-size:0.92rem;line-height:1.65;margin-bottom:0.55rem;';
+      buf.appendChild(p);
+      continue;
+    }
+
+    if (tag === 'TABLE') { buf.appendChild(el.cloneNode(true)); continue; }
+
+    if (tag === 'DIV' || tag === 'SECTION') {
+      buf.appendChild(el.cloneNode(true));
+      continue;
+    }
+  }
+  flush();
+  rewriteLinks(wrap);
+  mainEl.innerHTML = '';
+  mainEl.appendChild(wrap);
+}
+
+function renderDl(dl) {
+  const c = document.createElement('div');
+  c.className = 'wikt-dl';
+  for (const dd of dl.querySelectorAll('dd')) {
+    const newDd = document.createElement('dd');
+    const clone = dd.cloneNode(true);
+    const trEl  = clone.querySelector('.e-translation, [class*="translation"]');
+    let trText  = '';
+    if (trEl) { trText = trEl.textContent.trim(); trEl.remove(); }
+    else {
+      const m = clone.textContent.match(/[―—–]\s*(.+)$/);
+      if (m) trText = m[1].trim();
+    }
+    newDd.innerHTML = clone.innerHTML.trim();
+    if (trText) {
+      const tr = document.createElement('span');
+      tr.className = 'example-tr';
+      tr.textContent = trText;
+      newDd.appendChild(tr);
+    }
+    c.appendChild(newDd);
+  }
+  return c;
+}
+
+function renderUl(ul) {
+  const n = document.createElement('ul');
+  n.className = 'wikt-ul';
+  n.innerHTML = ul.innerHTML;
+  return n;
+}
+
+/* ── HELPERS ── */
+function showError(msg) {
+  mainEl.innerHTML = `<div class="state-error">${msg}</div>`;
+}
+function showSuggestions() {
+  const div = document.createElement('div');
+  div.className = 'suggestions';
+  div.innerHTML = `<div class="suggestions-label">Try for example</div>
+    ${SUGGESTIONS.map(w => `<button class="suggestion-btn">${esc(w)}</button>`).join('')}`;
+  mainEl.appendChild(div);
+  div.querySelectorAll('.suggestion-btn').forEach(b => {
+    b.addEventListener('click', () => lookup(b.textContent.trim()));
+  });
+}
+</script>
+</body>
+</html>
